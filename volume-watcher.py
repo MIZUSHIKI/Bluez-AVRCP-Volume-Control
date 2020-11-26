@@ -11,7 +11,9 @@ import dbus.mainloop.glib
 try:
     import gobject
 except ImportError:
-    from gi.repository import GObject as gobject
+    from gi.repository import GLib
+import re
+import subprocess
 
 
 LOG_LEVEL = logging.INFO
@@ -32,10 +34,21 @@ def device_property_changed_cb(property_name, value, path, interface, device_pat
 
 	vol = properties["Volume"]
 	volume_percentage = format(vol / 1.27, '.2f')
-	logger.info("Detected volume change: {} ({})".format(vol, volume_percentage) )
-	cmd = "amixer cset numid=3 {}%".format(volume_percentage)
-	logger.info("Running cmd: {}".format(cmd))
-	os.system(cmd)
+	
+	set_device_volume(float(volume_percentage), properties["Device"])
+
+def set_device_volume(vol, devName):
+	args = ['pacmd', 'list-sources']
+	r = subprocess.run(args, stdout=subprocess.PIPE)
+	res = f'{r.stdout}'
+	#Get the device index for devName from the output
+	m = re.findall(r'index: (\d+)', res[:res.find(f'bluez.path = "{devName}"')+1])
+	if not m:
+		return
+	devIndex = m[-1]
+	setVolume = int(65535 * vol / 100)
+	args = ['pacmd', 'set-source-volume', devIndex, f'{setVolume}']
+	subprocess.run(args)
 
 def shutdown(signum, frame):
 	mainloop.quit()
@@ -62,7 +75,7 @@ if __name__ == "__main__":
 	bus.add_signal_receiver(device_property_changed_cb, bus_name="org.bluez", signal_name="PropertiesChanged", path_keyword="device_path", interface_keyword="interface")
 
 	try:
-		mainloop = gobject.MainLoop()
+		mainloop = GLib.MainLoop()
 		mainloop.run()
 	except KeyboardInterrupt:
 		pass
