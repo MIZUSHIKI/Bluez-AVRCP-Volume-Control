@@ -11,3 +11,6 @@ sudo apt-get install pavucontrol
 ```
 <img src="https://user-images.githubusercontent.com/33353602/100391432-c12a9680-3076-11eb-9d23-778c3fc19052.png" width="250px">
 <img src="https://user-images.githubusercontent.com/33353602/100391440-c5ef4a80-3076-11eb-9a62-10c8a909cc63.png" width="300px">
+
+I used it on my system like this.  
+https://github.com/MIZUSHIKI/Aggregate-bluetooth-audio-RasPi
